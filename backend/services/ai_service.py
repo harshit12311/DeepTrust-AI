@@ -4,6 +4,7 @@ import numpy as np
 import torch
 
 from model.model import DeepfakeClassifier
+from backend.services.face_service import extract_face
 
 from backend.services.image_service import preprocess_image
 from backend.services.video_service import preprocess_video
@@ -62,7 +63,7 @@ def _predict_processed_image(image):
     with torch.no_grad():
         tensor = _image_to_tensor(image)
         logits = MODEL(tensor)
-        print("Raw model output:", logits)
+        
 
         # If the checkpoint already outputs probabilities,
         # don't apply sigmoid again.
@@ -81,14 +82,21 @@ def predict_image(image_path):
         if processed_image is None:
             return None
 
-        fake_probability = _predict_processed_image(processed_image)
+        face = extract_face(processed_image)
+        
+
+        if face is None:
+            return None
+
+        fake_probability = _predict_processed_image(face)
         if fake_probability is None:
             return None
 
         return _prediction_from_probability(fake_probability)
-    except (RuntimeError, ValueError, TypeError) as error:
-        print(f"Image AI prediction error: {error}")
-        return None
+    except Exception as error:
+     import traceback
+     traceback.print_exc()
+     return None
 
 
 def predict_video(video_path):
@@ -96,7 +104,7 @@ def predict_video(video_path):
     try:
         processed_frames = preprocess_video(video_path)
 
-        print("Frames extracted:", len(processed_frames) if processed_frames else 0)
+        
 
         if not processed_frames:
             return None
@@ -105,10 +113,15 @@ def predict_video(video_path):
 
         for frame in processed_frames:
 
-            fake_probability = _predict_processed_image(frame)
+            face = extract_face(frame)
+           
+            if face is None:
+                continue
+
+            fake_probability = _predict_processed_image(face)
 
             if fake_probability is not None:
-                print("Frame probability:", fake_probability)
+                
                 fake_probabilities.append(fake_probability)
 
         if not fake_probabilities:
@@ -118,6 +131,7 @@ def predict_video(video_path):
 
         return _prediction_from_probability(average_fake_probability)
 
-    except (RuntimeError, ValueError, TypeError) as error:
-        print(f"Video AI prediction error: {error}")
+    except Exception:
+        import traceback
+        traceback.print_exc()
         return None

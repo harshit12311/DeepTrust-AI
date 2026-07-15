@@ -2,19 +2,16 @@ import cv2
 
 
 def preprocess_image(image_path):
-    """Read and preprocess an image for model inference."""
-    try:
-        image = cv2.imread(image_path)
+    """
+    Read an image and convert it to RGB.
+    No resizing or preprocessing is done here.
+    """
 
-        if image is None:
-            return None
+    image = cv2.imread(image_path)
 
-        # Standardize input size before applying denoising and color conversion.
-        resized_image = cv2.resize(image, (224, 224))
-        blurred_image = cv2.GaussianBlur(resized_image, (5, 5), 0)
-        processed_image = cv2.cvtColor(blurred_image, cv2.COLOR_BGR2RGB)
+    if image is None:
+        return None
 
-        return processed_image
-    except (cv2.error, OSError, TypeError) as e:
-     print(f"Image preprocessing error: {e}")
-     return None
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    return image
