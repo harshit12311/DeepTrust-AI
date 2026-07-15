@@ -7,7 +7,7 @@ from model.model import DeepfakeClassifier
 
 from backend.services.image_service import preprocess_image
 from backend.services.video_service import preprocess_video
-from model.model import DeepfakeClassifier
+
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -62,7 +62,14 @@ def _predict_processed_image(image):
     with torch.no_grad():
         tensor = _image_to_tensor(image)
         logits = MODEL(tensor)
-        fake_probability = torch.sigmoid(logits).item()
+        print("Raw model output:", logits)
+
+        # If the checkpoint already outputs probabilities,
+        # don't apply sigmoid again.
+        if logits.min() >= 0 and logits.max() <= 1:
+            fake_probability = logits.item()
+        else:
+            fake_probability = torch.sigmoid(logits).item()
 
     return fake_probability
 
@@ -88,20 +95,29 @@ def predict_video(video_path):
     """Predict a video by averaging fake probabilities across sampled frames."""
     try:
         processed_frames = preprocess_video(video_path)
+
+        print("Frames extracted:", len(processed_frames) if processed_frames else 0)
+
         if not processed_frames:
             return None
 
         fake_probabilities = []
+
         for frame in processed_frames:
+
             fake_probability = _predict_processed_image(frame)
+
             if fake_probability is not None:
+                print("Frame probability:", fake_probability)
                 fake_probabilities.append(fake_probability)
 
         if not fake_probabilities:
             return None
 
         average_fake_probability = sum(fake_probabilities) / len(fake_probabilities)
+
         return _prediction_from_probability(average_fake_probability)
+
     except (RuntimeError, ValueError, TypeError) as error:
         print(f"Video AI prediction error: {error}")
         return None

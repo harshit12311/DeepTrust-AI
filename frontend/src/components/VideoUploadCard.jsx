@@ -1,16 +1,16 @@
 import { useState } from "react";
 import api from "../services/api";
 
-function UploadCard() {
+function VideoUploadCard() {
 
     const [file, setFile] = useState(null);
     const [prediction, setPrediction] = useState("");
     const [confidence, setConfidence] = useState("");
 
-    const analyzeImage = async () => {
+    const analyzeVideo = async () => {
 
         if (!file) {
-            alert("Select an image first.");
+            alert("Select a video first.");
             return;
         }
 
@@ -19,43 +19,39 @@ function UploadCard() {
 
         try {
 
-            // Upload image
+            // Upload video
             const uploadResponse = await api.post("/upload", formData);
 
-            // Run prediction
-            const predictionResponse = await api.post("/predict/image", {
+            // Predict video
+            const predictionResponse = await api.post("/predict/video", {
                 filename: uploadResponse.data.filename
             });
 
             setPrediction(predictionResponse.data.prediction);
             setConfidence(predictionResponse.data.confidence);
 
-        }  catch (error) {
-    console.error(error);
-
-    if (error.response) {
-        alert(error.response.data.message || "Prediction failed.");
-    } else {
-        alert("Prediction failed.");
-    }
-}
+        } catch (error) {
+            console.error(error);
+            alert("Video prediction failed.");
+        }
     };
 
     return (
 
         <div className="card">
 
-            <h2>Image Detection</h2>
+            <h2>Video Detection</h2>
 
             <input
                 type="file"
+                accept="video/*"
                 onChange={(e) => setFile(e.target.files[0])}
             />
 
             <br /><br />
 
-            <button onClick={analyzeImage}>
-                Analyze Image
+            <button onClick={analyzeVideo}>
+                Analyze Video
             </button>
 
             <br /><br />
@@ -69,4 +65,4 @@ function UploadCard() {
     );
 }
 
-export default UploadCard;
+export default VideoUploadCard;
