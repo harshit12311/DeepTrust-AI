@@ -1,15 +1,19 @@
 """Flask application entry point for DeepTrust AI."""
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 
-from routes.upload_routes import upload_bp
+from backend.routes.upload_routes import upload_bp
+from backend.routes.prediction_routes import prediction_bp
 
 
 # Create the Flask application instance.
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
 
 # Register upload-related endpoints.
 app.register_blueprint(upload_bp)
+app.register_blueprint(prediction_bp)
 
 
 @app.route("/")

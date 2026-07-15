@@ -5,13 +5,8 @@ from pathlib import Path
 from flask import Blueprint, jsonify, request
 from werkzeug.utils import secure_filename
 
-try:
-    from config import Config
-    from services.image_service import preprocess_image
-except ModuleNotFoundError:
-    from backend.config import Config
-    from backend.services.image_service import preprocess_image
-
+from backend.config import Config
+from backend.services.image_service import preprocess_image
 
 # Blueprint that groups all upload-related endpoints.
 upload_bp = Blueprint("upload", __name__)
